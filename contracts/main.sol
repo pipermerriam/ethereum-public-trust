@@ -3,87 +3,62 @@ contract owned {
         address owner;
 
         modifier onlyowner { if (msg.sender == owner) _ }
+}
 
+contract mortal is owned {
         function kill() onlyowner {
                 suicide(owner);
         }
 }
 
 
-contract EthereumPublicTrust {
-        address membershipRoster;
-        address balletBox;
-
-        // Initializer
-        function EthereumPublicTrust() {
-                membershipRoster = address(new MembershipRoster());
-                balletBox = address(new BalletBox());
-        }
-
-
-        function checkMembership( {
-        }
-}
-
-
-contract MembershipRoster is owned {
-        address creator;
-
+contract MembershipRoster is mortal {
         address[] members;
+        uint currentIndex;
         uint memberCount;
 
         mapping (address => bool) isMember;
+        mapping (address => uint) memberIndex;
+
+        modifier onlymember { if (isMember[msg.sender] == true) _ }
 
         function MembershipRoster(address creator) {
-                creator = creator;
-                members[0] = creator;
-                memberCount++;
-                isMember[creator] = true;
+            addMember(msg.sender);
+            addMember(creator);
         }
 
-        function addMember(address newMember) onlyowner {
-                if ( isMember[newMember] ) {
+        function addMember(address memberAddress) onlymember returns (bool successful) {
+                if ( isMember[memberAddress] ) {
                         return false;
                 }
 
-                members[0] = newMember;
+                isMember[memberAddress] = true;
+                members[currentIndex] = memberAddress;
                 memberCount++;
-                isMember[newMember] = true;
+                currentIndex++;
 
                 return true;
         }
 
-        function removeMember() ownlyowner {
-        }
-}
-
-
-contract BalletBox is owned {
-        modifier onlymember { if (owner.call("checkMembership", msg.sender) _ }
-
-        function createVote() onlymember {
-        }
-}
-
-
-contract vote {
-        address balletBox;
-
-        modifier onlyballetbox { if (msg.sender == balletBox) _ }
-
-        function vote(address balletBox) {
-                balletBox = balletBox;
-        }
-
-        function ratify() onlyballetbox;
-
-        function fail() onlyballetbox {
-                suicide(balletBox);
-        }
-
-        function check() {
-                if ( msg.sender != balletBox ) {
-                        __throw();
+        function removeMember(address memberAddress) onlymember returns (bool successful) {
+                if ( !isMember[memberAddress] ) {
+                        return false;
                 }
+                isMember[memberAddress] = false;
+                members[memberIndex[memberAddress]] = 0x0;
+
+                memberCount--;
+
+                return true;
+        }
+}
+
+
+contract EthereumPublicTrust is mortal {
+        address membershipRoster;
+
+        // Initializer
+        function EthereumPublicTrust() {
+                membershipRoster = address(new MembershipRoster(msg.sender));
         }
 }
