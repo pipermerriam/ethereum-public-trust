@@ -14,51 +14,58 @@ contract mortal is owned {
 
 contract MembershipRoster is mortal {
         address[] members;
-        uint currentIndex;
-        uint memberCount;
+        uint currentIndex = 0;
+        uint memberCount = 0;
 
         mapping (address => bool) isMember;
         mapping (address => uint) memberIndex;
 
         modifier onlymember { if (isMember[msg.sender] == true) _ }
 
-        function MembershipRoster(address creator) {
-            addMember(msg.sender);
-            addMember(creator);
+        function MembershipRoster() {
+                isMember[msg.sender] = true;
+                members[currentIndex] = msg.sender;
+                memberIndex[msg.sender] = currentIndex;
+                memberCount++;
+                currentIndex++;
         }
 
-        function addMember(address memberAddress) onlymember returns (bool successful) {
-                if ( isMember[memberAddress] ) {
+        function addMember(address _address) onlymember public returns (bool successful) {
+                if ( isMember[_address] ) {
                         return false;
                 }
 
-                isMember[memberAddress] = true;
-                members[currentIndex] = memberAddress;
+                isMember[_address] = true;
+                members[currentIndex] = _address;
+                memberIndex[_address] = currentIndex;
                 memberCount++;
                 currentIndex++;
 
                 return true;
         }
 
-        function removeMember(address memberAddress) onlymember returns (bool successful) {
-                if ( !isMember[memberAddress] ) {
+        function removeMember(address _address) onlymember public returns (bool successful) {
+                if ( !isMember[_address] ) {
                         return false;
                 }
-                isMember[memberAddress] = false;
-                members[memberIndex[memberAddress]] = 0x0;
+                isMember[_address] = false;
+                members[memberIndex[_address]] = 0x0;
 
                 memberCount--;
 
                 return true;
         }
+
+        function checkMembership(address _address) public returns (bool addressIsMember) {
+                return isMember[_address];
+        }
 }
 
 
-contract EthereumPublicTrust is mortal {
+contract EthereumPublicTrust is mortal{
         address membershipRoster;
 
-        // Initializer
-        function EthereumPublicTrust() {
-                membershipRoster = address(new MembershipRoster(msg.sender));
+        function setMembershipRoster(address _address) onlyowner public {
+                membershipRoster = _address;
         }
 }
