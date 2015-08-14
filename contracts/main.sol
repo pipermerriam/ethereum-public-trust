@@ -13,10 +13,10 @@ contract mortal is owned {
 
 
 contract MembershipRoster is mortal {
-        address[] members;
         uint currentIndex = 0;
         uint memberCount = 0;
 
+        mapping (uint => address) members;
         mapping (address => bool) isMember;
         mapping (address => uint) memberIndex;
 
